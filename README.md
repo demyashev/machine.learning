@@ -48,6 +48,11 @@
 ## Выполнение задания
 ### Наивный Байес [Пункт 0-2]
 Читаем письма, с помощью наивного байесовского классификатора проводим обучение и оценку.
+    
+    X, y = read_email_files()
+    vectorizer = CountVectorizer()
+    clf = MultinomialNB()
+    classify(X, y, clf, vectorizer)
 
 Получаем результат:
 
@@ -60,7 +65,17 @@
 ![Различие между оригинальным письмом (слева) и измененым (справа)](docs/diff.letters.jpg "Различие между оригинальным письмом (слева) и измененым (справа)")
 *Различие между оригинальным письмом (слева) и измененым (справа)*
 
-На первом (исходном) письме, обученный классификатор считает письмо спамом. Второе (измененное) тоже спам. Расстояние Левинштейна равно `82`
+    filename = 'inmail.4'
+    email_str0 = email_read_util.extract_email_text(os.path.join(DATA_DIR, filename))
+    email_str1 = email_read_util.extract_email_text(os.path.join(filename))
+    ind = X.index(email_str0)
+    print('First label: ', end='')
+    print(y[ind])
+    print('Edit distance: ', end='')
+    print(edit_distance(email_str0, email_str1))
+    compare(email_str0, email_str1, clf, vectorizer)
+
+На первом (исходном) письме, обученный классификатор считает письмо спамом. Второе (измененное) тоже спам. Расстояние Левенштейна равно `82`
 
     First label: 0
     Edit distance: 82
@@ -71,25 +86,41 @@
 
 Загружаем письма с помощью метода `load()`,  а не `extract_email_text()`, проводим классификацию, сравниваем письма.
 
+    X, y = read_email_files_load()
+    classify(X, y, clf, vectorizer)
+    email_str0 = email_read_util.load(os.path.join(DATA_DIR, filename))
+    email_str1 = email_read_util.load(os.path.join(filename))
+    compare(email_str0, email_str1, clf, vectorizer)
+
+Классификатор, после замены функции, отнес модифицированное письмо к спаму.
+
     Accuracy: [0.97820207 0.97295147 0.95497036]
     Mean accuracy: 0.9687079683156293
     Predicted label: 0
     New label: 0
 
-Классификатор, после замены функции, отнес модифицированное письмо к спаму.
-
 ### Биграммы [пункт 5]
 
 **CountVectorizer** с параметрами инициализации `ngram_range=(2, 2)`
+    
+    vectorizer = CountVectorizer(ngram_range=(2, 2))
+    classify(X, y, clf, vectorizer)
+    compare(email_str0, email_str1, clf, vectorizer)
+
+Точность повысилась, оба письма - спам:
 
     Accuracy: [0.98838504 0.98174224 0.97497912]
     Mean accuracy: 0.9817021344353768
     Predicted label: 0
     New label: 0
 
-Точность повысилась, оба письма - спам.
-
 **TfidfVectorizer**
+
+    vectorizer = TfidfVectorizer()
+    classify(X, y, clf, vectorizer)
+    compare(email_str0, email_str1, clf, vectorizer)
+    
+В обоих случаях "отравленное" письмо отнесли к спаму:
 
     Accuracy: [0.97143994 0.97171838 0.9761327 ]
     Mean accuracy: 0.9730970052068706
@@ -98,16 +129,19 @@
 
 Точность меньше, чем при `CountVectorizer(ngram_range=(2, 2))`, но выше, чем у `байесовского`.
 
-В обоих случаях "отравленное" письмо отнесли к спаму.
-
 ### Случайный лес [пункт 6-7]
+
+    clf = RandomForestClassifier()
+    classify(X, y, clf, vectorizer)
+    compare(email_str0, email_str1, clf, vectorizer)
+
+Усредненная точность выше `байесовского`, `TfidfVectorizer`, но чуть меньше `CountVectorizer` с биграммами. Оба письма - спам:
 
     Accuracy: [0.98281623 0.98257757 0.97748518]
     Mean accuracy: 0.9809596590451125
     Predicted label: 0
     New label: 0
 
-Усредненная точность выше `байесовского`, `TfidfVectorizer`, но чуть меньше `CountVectorizer` с биграммами. Оба письма - спам.
 
 ## Ссылки
 
